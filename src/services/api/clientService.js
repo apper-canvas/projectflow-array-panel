@@ -49,7 +49,29 @@ export const clientService = {
     if (index === -1) {
       throw new Error("Client not found");
     }
-    clients.splice(index, 1);
+clients.splice(index, 1);
     return true;
+  },
+
+  async getClientStats(id) {
+    await delay(200);
+    const client = clients.find(c => c.Id === parseInt(id));
+    if (!client) {
+      throw new Error("Client not found");
+    }
+    
+    // Import projects data to calculate stats
+    const projectsData = await import("@/services/mockData/projects.json");
+    const projects = projectsData.default;
+    
+    const clientProjects = projects.filter(p => p.clientId === parseInt(id));
+    const activeProjects = clientProjects.filter(p => p.status === "in-progress" || p.status === "planning");
+    const totalRevenue = clientProjects.reduce((sum, project) => sum + (project.budget || 0), 0);
+    
+    return {
+      totalProjects: clientProjects.length,
+      activeProjects: activeProjects.length,
+      totalRevenue: totalRevenue
+    };
   }
 };

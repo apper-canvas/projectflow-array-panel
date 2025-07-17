@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
@@ -191,12 +192,12 @@ const ClientModal = ({ isOpen, onClose, onSuccess }) => {
 };
 
 const Clients = () => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-
   const loadClients = async () => {
     try {
       setLoading(true);
@@ -219,8 +220,12 @@ const Clients = () => {
     setShowModal(true);
   };
 
-  const handleModalSuccess = () => {
+const handleModalSuccess = () => {
     loadClients();
+  };
+
+  const handleViewClient = (clientId) => {
+    navigate(`/clients/${clientId}`);
   };
 
   const filteredClients = clients.filter(client =>
@@ -297,13 +302,13 @@ actionText="Add Client"
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClients.map((client, index) => (
             <motion.div
-              key={client.Id}
+key={client.Id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
               whileHover={{ y: -4 }}
             >
-              <Card className="p-6 hover:shadow-lg transition-all duration-300">
+              <Card className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleViewClient(client.Id)}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
@@ -341,21 +346,37 @@ actionText="Add Client"
                   <div className="flex items-center text-sm text-surface-600 dark:text-surface-400">
                     <ApperIcon name="DollarSign" className="w-4 h-4 mr-2" />
                     ${client.totalRevenue.toLocaleString()} revenue
-                  </div>
+</div>
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewClient(client.Id);
+                    }}
+                  >
                     <ApperIcon name="Eye" className="w-4 h-4 mr-2" />
                     View
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <ApperIcon name="Edit" className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <ApperIcon name="Trash2" className="w-4 h-4" />
-                  </Button>
-</div>
+</Button>
+                </div>
               </Card>
             </motion.div>
           ))}
