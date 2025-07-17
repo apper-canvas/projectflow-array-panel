@@ -16,13 +16,26 @@ const Invoices = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    description: "",
+    amount: "",
+    tax: "",
+    dueDate: "",
+    clientId: ""
+  });
+  const [formErrors, setFormErrors] = useState({});
 
-  const loadInvoices = async () => {
+const loadInvoices = async (showSuccessToast = false) => {
     try {
       setLoading(true);
       setError("");
       const invoicesData = await invoiceService.getAll();
       setInvoices(invoicesData);
+      if (showSuccessToast) {
+        toast.success("Invoice created successfully!");
+      }
     } catch (err) {
       setError(err.message);
       toast.error("Failed to load invoices");
@@ -31,9 +44,116 @@ const Invoices = () => {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     loadInvoices();
   }, []);
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+    }
+    
+    if (!formData.amount || isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
+      errors.amount = "Valid amount is required";
+    }
+    
+    if (!formData.tax || isNaN(parseFloat(formData.tax)) || parseFloat(formData.tax) < 0) {
+      errors.tax = "Valid tax amount is required";
+    }
+    
+    if (!formData.dueDate) {
+      errors.dueDate = "Due date is required";
+    } else {
+      const selectedDate = new Date(formData.dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        errors.dueDate = "Due date cannot be in the past";
+      }
+    }
+    
+    if (!formData.clientId) {
+      errors.clientId = "Client is required";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setSubmitting(true);
+    
+    try {
+      const invoiceData = {
+        description: formData.description.trim(),
+        amount: parseFloat(formData.amount),
+        tax: parseFloat(formData.tax),
+        dueDate: formData.dueDate,
+        clientId: parseInt(formData.clientId),
+        total: parseFloat(formData.amount) + parseFloat(formData.tax)
+      };
+      
+      await invoiceService.create(invoiceData);
+      
+      // Reset form and close modal
+      setFormData({
+        description: "",
+        amount: "",
+        tax: "",
+        dueDate: "",
+        clientId: ""
+      });
+      setFormErrors({});
+      setShowModal(false);
+      
+      // Reload invoices with success message
+      loadInvoices(true);
+      
+    } catch (err) {
+      toast.error(err.message || "Failed to create invoice");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setFormData({
+      description: "",
+      amount: "",
+      tax: "",
+      dueDate: "",
+      clientId: ""
+    });
+    setFormErrors({});
+  };
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape' && showModal) {
+        handleCloseModal();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [showModal]);
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,7 +209,7 @@ const Invoices = () => {
               Manage billing and track payment status for your projects.
             </p>
           </div>
-          <Button variant="primary">
+<Button variant="primary" onClick={() => setShowModal(true)}>
             <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
             New Invoice
           </Button>
@@ -205,6 +325,172 @@ const Invoices = () => {
               </Card>
             </motion.div>
           ))}
+</div>
+      )}
+
+      {/* Add Invoice Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-surface-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-surface-900 dark:text-surface-100">
+                  Create New Invoice
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-surface-400 hover:text-surface-600 dark:text-surface-500 dark:hover:text-surface-300 transition-colors"
+                >
+                  <ApperIcon name="X" className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Description *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    placeholder="Enter invoice description"
+                    className={formErrors.description ? "border-red-500" : ""}
+                  />
+                  {formErrors.description && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {formErrors.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Amount *
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.amount}
+                      onChange={(e) => handleInputChange("amount", e.target.value)}
+                      placeholder="0.00"
+                      className={formErrors.amount ? "border-red-500" : ""}
+                    />
+                    {formErrors.amount && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {formErrors.amount}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Tax *
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.tax}
+                      onChange={(e) => handleInputChange("tax", e.target.value)}
+                      placeholder="0.00"
+                      className={formErrors.tax ? "border-red-500" : ""}
+                    />
+                    {formErrors.tax && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {formErrors.tax}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Due Date *
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => handleInputChange("dueDate", e.target.value)}
+                    className={formErrors.dueDate ? "border-red-500" : ""}
+                  />
+                  {formErrors.dueDate && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {formErrors.dueDate}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Client ID *
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.clientId}
+                    onChange={(e) => handleInputChange("clientId", e.target.value)}
+                    placeholder="Enter client ID"
+                    className={formErrors.clientId ? "border-red-500" : ""}
+                  />
+                  {formErrors.clientId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {formErrors.clientId}
+                    </p>
+                  )}
+                </div>
+
+                {formData.amount && formData.tax && (
+                  <div className="bg-surface-50 dark:bg-surface-700 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                        Total Amount:
+                      </span>
+                      <span className="text-lg font-bold text-surface-900 dark:text-surface-100">
+                        ${(parseFloat(formData.amount || 0) + parseFloat(formData.tax || 0)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseModal}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <ApperIcon name="Loader2" className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
+                        Create Invoice
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
