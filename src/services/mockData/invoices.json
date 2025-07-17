@@ -1,0 +1,160 @@
+[
+  {
+    "Id": 1,
+    "clientId": 1,
+    "projectId": 1,
+    "invoiceNumber": "INV-2023-001",
+    "amount": 8500,
+    "tax": 765,
+    "total": 9265,
+    "status": "paid",
+    "issueDate": "2023-10-01",
+    "dueDate": "2023-10-31",
+    "paidDate": "2023-10-15",
+    "description": "E-commerce Platform Redesign - Phase 1",
+    "items": [
+      {
+        "description": "UI/UX Design",
+        "quantity": 40,
+        "rate": 150,
+        "amount": 6000
+      },
+      {
+        "description": "Frontend Development",
+        "quantity": 25,
+        "rate": 100,
+        "amount": 2500
+      }
+    ]
+  },
+  {
+    "Id": 2,
+    "clientId": 2,
+    "projectId": 3,
+    "invoiceNumber": "INV-2023-002",
+    "amount": 12000,
+    "tax": 1080,
+    "total": 13080,
+    "status": "paid",
+    "issueDate": "2023-08-15",
+    "dueDate": "2023-09-14",
+    "paidDate": "2023-09-10",
+    "description": "Brand Identity Design - Complete Package",
+    "items": [
+      {
+        "description": "Logo Design",
+        "quantity": 1,
+        "rate": 5000,
+        "amount": 5000
+      },
+      {
+        "description": "Brand Guidelines",
+        "quantity": 1,
+        "rate": 3000,
+        "amount": 3000
+      },
+      {
+        "description": "Marketing Materials",
+        "quantity": 1,
+        "rate": 4000,
+        "amount": 4000
+      }
+    ]
+  },
+  {
+    "Id": 3,
+    "clientId": 3,
+    "projectId": 5,
+    "invoiceNumber": "INV-2023-003",
+    "amount": 7500,
+    "tax": 675,
+    "total": 8175,
+    "status": "pending",
+    "issueDate": "2023-10-15",
+    "dueDate": "2023-11-14",
+    "paidDate": null,
+    "description": "SEO Optimization - Month 1",
+    "items": [
+      {
+        "description": "SEO Audit",
+        "quantity": 1,
+        "rate": 2000,
+        "amount": 2000
+      },
+      {
+        "description": "Keyword Research",
+        "quantity": 20,
+        "rate": 125,
+        "amount": 2500
+      },
+      {
+        "description": "Content Optimization",
+        "quantity": 30,
+        "rate": 100,
+        "amount": 3000
+      }
+    ]
+  },
+  {
+    "Id": 4,
+    "clientId": 4,
+    "projectId": 6,
+    "invoiceNumber": "INV-2023-004",
+    "amount": 5500,
+    "tax": 495,
+    "total": 5995,
+    "status": "overdue",
+    "issueDate": "2023-09-01",
+    "dueDate": "2023-09-30",
+    "paidDate": null,
+    "description": "Analytics Dashboard - Initial Setup",
+    "items": [
+      {
+        "description": "Dashboard Design",
+        "quantity": 15,
+        "rate": 150,
+        "amount": 2250
+      },
+      {
+        "description": "Data Integration",
+        "quantity": 20,
+        "rate": 125,
+        "amount": 2500
+      },
+      {
+        "description": "Testing & Setup",
+        "quantity": 5,
+        "rate": 150,
+        "amount": 750
+      }
+    ]
+  },
+  {
+    "Id": 5,
+    "clientId": 1,
+    "projectId": 2,
+    "invoiceNumber": "INV-2023-005",
+    "amount": 15000,
+    "tax": 1350,
+    "total": 16350,
+    "status": "draft",
+    "issueDate": "2023-10-25",
+    "dueDate": "2023-11-24",
+    "paidDate": null,
+    "description": "Mobile App Development - Phase 1",
+    "items": [
+      {
+        "description": "iOS Development",
+        "quantity": 60,
+        "rate": 125,
+        "amount": 7500
+      },
+      {
+        "description": "Android Development",
+        "quantity": 60,
+        "rate": 125,
+        "amount": 7500
+      }
+    ]
+  }
+]
