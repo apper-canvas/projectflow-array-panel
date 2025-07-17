@@ -252,7 +252,7 @@ const Clients = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-surface-900 dark:text-surface-100 mb-2">
               Clients
@@ -261,7 +261,7 @@ const Clients = () => {
               Manage your client relationships and contact information.
             </p>
           </div>
-<Button variant="primary" onClick={handleShowModal}>
+          <Button variant="primary" onClick={handleShowModal}>
             <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
             Add Client
           </Button>
@@ -355,9 +355,9 @@ actionText="Add Client"
                   <Button variant="ghost" size="sm">
                     <ApperIcon name="Trash2" className="w-4 h-4" />
                   </Button>
-                </div>
+</div>
               </Card>
-</motion.div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -367,6 +367,7 @@ actionText="Add Client"
         onSuccess={handleModalSuccess}
       />
     </div>
+  );
 };
 
 export default Clients;
