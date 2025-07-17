@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import Card from "@/components/atoms/Card";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import Label from "@/components/atoms/Label";
 import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
 import Error from "@/components/ui/Error";
@@ -15,7 +16,18 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    category: "",
+    budget: "",
+    deadline: "",
+    priority: "medium",
+    status: "planning"
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
   const loadProjects = async () => {
     try {
       setLoading(true);
@@ -27,6 +39,62 @@ const Projects = () => {
       toast.error("Failed to load projects");
     } finally {
       setLoading(false);
+    }
+};
+
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    const errors = {};
+    if (!formData.name.trim()) errors.name = "Project name is required";
+    if (!formData.description.trim()) errors.description = "Description is required";
+    if (!formData.category.trim()) errors.category = "Category is required";
+    if (!formData.budget || isNaN(formData.budget) || parseFloat(formData.budget) <= 0) {
+      errors.budget = "Valid budget amount is required";
+    }
+    if (!formData.deadline) errors.deadline = "Deadline is required";
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    try {
+      setSubmitting(true);
+      setFormErrors({});
+      
+      const projectData = {
+        ...formData,
+        budget: parseFloat(formData.budget),
+        clientId: 1 // Default client for now
+      };
+      
+      await projectService.create(projectData);
+      toast.success("Project created successfully!");
+      setShowModal(false);
+      setFormData({
+        name: "",
+        description: "",
+        category: "",
+        budget: "",
+        deadline: "",
+        priority: "medium",
+        status: "planning"
+      });
+      loadProjects();
+    } catch (err) {
+      toast.error("Failed to create project");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -98,7 +166,7 @@ const Projects = () => {
               Track progress and manage your project portfolio.
             </p>
           </div>
-          <Button variant="primary">
+<Button variant="primary" onClick={() => setShowModal(true)}>
             <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
             New Project
           </Button>
@@ -126,9 +194,9 @@ const Projects = () => {
         <Empty
           icon="FolderOpen"
           title="No projects found"
-          description={searchTerm ? "Try adjusting your search terms." : "Create your first project to get started."}
+description={searchTerm ? "Try adjusting your search terms." : "Create your first project to get started."}
           actionText="New Project"
-          onAction={() => toast.info("New project functionality coming soon!")}
+          onAction={() => setShowModal(true)}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -209,6 +277,178 @@ const Projects = () => {
               </Card>
             </motion.div>
           ))}
+        </div>
+)}
+
+      {/* Create Project Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-surface-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-100">
+                  Create New Project
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowModal(false)}
+                  className="text-surface-400 hover:text-surface-600"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <form onSubmit={handleCreateProject} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Project Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter project name"
+                    className={formErrors.name ? "border-red-500" : ""}
+                  />
+                  {formErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter project description"
+                    rows={3}
+                    className={`w-full px-3 py-2 border rounded-md text-sm transition-colors ${
+                      formErrors.description 
+                        ? "border-red-500" 
+                        : "border-surface-300 dark:border-surface-600"
+                    } bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                  />
+                  {formErrors.description && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Web Development, Design, Marketing"
+                    className={formErrors.category ? "border-red-500" : ""}
+                  />
+                  {formErrors.category && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.category}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="budget">Budget ($)</Label>
+                  <Input
+                    id="budget"
+                    name="budget"
+                    type="number"
+                    value={formData.budget}
+                    onChange={handleInputChange}
+                    placeholder="Enter budget amount"
+                    min="0"
+                    step="0.01"
+                    className={formErrors.budget ? "border-red-500" : ""}
+                  />
+                  {formErrors.budget && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.budget}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="deadline">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    name="deadline"
+                    type="date"
+                    value={formData.deadline}
+                    onChange={handleInputChange}
+                    className={formErrors.deadline ? "border-red-500" : ""}
+                  />
+                  {formErrors.deadline && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.deadline}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="priority">Priority</Label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    value={formData.priority}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-surface-300 dark:border-surface-600 rounded-md text-sm bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-surface-300 dark:border-surface-600 rounded-md text-sm bg-white dark:bg-surface-900 text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="planning">Planning</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1"
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="flex-1"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <ApperIcon name="Loader2" className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
+                        Create Project
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
